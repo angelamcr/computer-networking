@@ -15,7 +15,7 @@ def welcome_assignment_answers(question):
     elif question == "Is a hashed message supposed to be un-hashed? - Yes/No":
             answer = "No"
     elif question == "What is the MD5 hashing value to the following message: 'NYU Computer Networking' - Use MD5 hash generator and use the answer in your code":
-            answer = "68c74b1fe84ac8c662849915bc9002f4"
+            answer = "42b76fe51778764973077a5a94056724"
     elif question == "Is MD5 a secured hashing algorithm? - Yes/No":
             answer = "No"
     elif question == "What layer from the TCP/IP model the protocol DHCP belongs to? - The answer should be a numeric number":
