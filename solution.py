@@ -86,7 +86,8 @@ def get_route(hostname):
 
             #Fill in start
             # Make a raw socket named mySocket
-            mySocket = socket(AF_INET, SOCK_RAW)
+            icmp = getprotobyname("icmp")
+            mySocket = socket(AF_INET, SOCK_RAW, icmp)
             #Fill in end
 
 
@@ -184,3 +185,7 @@ def get_route(hostname):
                 break
             finally:
                 mySocket.close()
+
+
+result = get_route("gaia.cs.umass.edu")
+print(result)
