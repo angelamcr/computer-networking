@@ -136,6 +136,5 @@ def get_route(hostname):
                 mySocket.close()
                 return tracelist2
 
-result = get_route("gaia.cs.umass.edu")
-print(result)
-# get_route("localhost")
+# result = get_route("gaia.cs.umass.edu")
+# print(result)
