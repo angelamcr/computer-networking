@@ -58,7 +58,7 @@ def get_route(hostname):
     tracelist1 = [] #This is your list to use when iterating through each trace
     tracelist2 = [] #This is your list to contain all traces
 
-    for ttl in range(1,MAX_HOPS):
+    for ttl in range(1, MAX_HOPS):
         for tries in range(TRIES):
             destAddr = gethostbyname(hostname)
 
@@ -69,8 +69,8 @@ def get_route(hostname):
             mySocket.setsockopt(IPPROTO_IP, IP_TTL, struct.pack('I', ttl))
             mySocket.settimeout(TIMEOUT)
             try:
-                d = build_packet()
-                mySocket.sendto(d, (hostname, 0))
+                packet = build_packet()
+                mySocket.sendto(packet, (destAddr, 0))
                 startedSelect = time.time()
                 whatReady = select.select([mySocket], [], [], timeLeft)
                 howLongInSelect = (time.time() - startedSelect)
@@ -135,3 +135,7 @@ def get_route(hostname):
             finally:
                 mySocket.close()
                 return tracelist2
+
+result = get_route("gaia.cs.umass.edu")
+print(result)
+# get_route("localhost")
