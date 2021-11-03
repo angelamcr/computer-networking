@@ -185,7 +185,3 @@ def get_route(hostname):
                 break
             finally:
                 mySocket.close()
-
-
-result = get_route("gaia.cs.umass.edu")
-print(result)
