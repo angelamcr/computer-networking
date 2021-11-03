@@ -40,9 +40,8 @@ def build_packet():
     processID = os.getpid() & 0xFFFF
     header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, processID, 1)
     data = struct.pack("d", time.time())
-    # Calculate the checksum on the data and the dummy header.
+    
     myChecksum = checksum(header + data)
-
     # Get the right checksum, and put in the header
     if sys.platform == 'darwin':
         # Convert 16-bit integers from host to network  byte order
