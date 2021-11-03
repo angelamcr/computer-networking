@@ -40,7 +40,7 @@ def build_packet():
     processID = os.getpid() & 0xFFFF
     header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, processID, 1)
     data = struct.pack("d", time.time())
-    
+
     myChecksum = checksum(header + data)
     # Get the right checksum, and put in the header
     if sys.platform == 'darwin':
@@ -120,5 +120,3 @@ def get_route(hostname):
                 break
             finally:
                 mySocket.close()
-
-get_route("google.com")
