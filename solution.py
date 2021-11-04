@@ -11,7 +11,7 @@ TIMEOUT = 2.0
 TRIES = 1
 
 
-def checksum(string):
+def get_checksum(string):
 # In this function we make the checksum of our packet
     csum = 0
     countTo = (len(string) // 2) * 2
@@ -37,22 +37,24 @@ def checksum(string):
 
 def build_packet():
     # Make a dummy header with a 0 checksum and a dummy identifier
-    ID = 60000
-    myChecksum = 0
+    code = 0
+    checksum = 0
+    identifier = 60000
+    sequence = 1
     # Header is type (8), code (8), checksum (16), id (16), sequence (16)
-    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, ID, 1)
+    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, code, checksum, identifier, sequence)
     data = struct.pack("d", time.time())
 
-    # Get the right checksum, and put in the header
-    myChecksum = checksum(header + data)
+    # Get the right checksum
+    checksum = get_checksum(header + data)
 
     # Convert 16-bit integers from host to network  byte order
     if sys.platform == 'darwin':
-        myChecksum = htons(myChecksum) & 0xffff
+        checksum = htons(checksum) & 0xffff
     else:
-        myChecksum = htons(myChecksum)
-
-    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, ID, 1)
+        checksum = htons(checksum)
+    # Create a new header with the new checksum
+    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, code, checksum, identifier, sequence)
 
     packet = header + data
     return packet
