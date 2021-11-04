@@ -76,35 +76,30 @@ def get_route(hostname):
             mySocket.setsockopt(IPPROTO_IP, IP_TTL, struct.pack('I', ttl))
             mySocket.settimeout(TIMEOUT)
             try:
-                d = build_packet()
+                icmp_packet = build_packet()
                 # mySocket.sendto(d, (hostname, 0))
-                mySocket.sendto(d, (destAddr, 0))
-                t= time.time()
+                mySocket.sendto(icmp_packet, (destAddr, 0))
                 startedSelect = time.time()
                 whatReady = select.select([mySocket], [], [], timeLeft)
                 howLongInSelect = (time.time() - startedSelect)
-                if whatReady[0] == []: # Timeout
+                if not whatReady[0]: # Timeout
                     tracelist1.append(str(ttl))
                     tracelist1.append("*")
                     tracelist1.append("Request timed out.")
-                    #You should add the list above to your all traces list
                     tracelist2.append(tracelist1)
                 recvPacket, addr = mySocket.recvfrom(1024)
                 timeReceived = time.time()
                 timeLeft = timeLeft - howLongInSelect
                 if timeLeft <= 0:
-                    # tracelist1.append("* * * Request timed out.")
                     tracelist1.append(str(ttl))
                     tracelist1.append("*")
                     tracelist1.append("Request timed out.")
-                    #You should add the list above to your all traces list
                     tracelist2.append(tracelist1)
             except timeout:
                 continue
 
-
             else:
-                #Fetch the icmp type from the IP packet
+                # Fetch the icmp type from the IP packet, it is the first byte after the IP header
                 types = struct.unpack("b", recvPacket[20:21])[0]
                 try:
                     responseHostName = gethostbyaddr(addr[0])
