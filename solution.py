@@ -36,26 +36,23 @@ def checksum(string):
 
 
 def build_packet():
-    # dummy identifier (processid/portnumber) initial checksum 0 to create the header and store it as bytes
-    code = 0
+    # Make a dummy header with a 0 checksum and a dummy identifier
+    ID = 60000
     myChecksum = 0
-    identifier = 60000
-    sequence = 1
-    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, code, myChecksum, identifier, sequence)
-
+    # Header is type (8), code (8), checksum (16), id (16), sequence (16)
+    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, ID, 1)
     data = struct.pack("d", time.time())
 
-    # Calculate the checksum on the data and the header.
+    # Get the right checksum, and put in the header
     myChecksum = checksum(header + data)
 
-    # Convert 16-bit integers from host to network byte order
+    # Convert 16-bit integers from host to network  byte order
     if sys.platform == 'darwin':
         myChecksum = htons(myChecksum) & 0xffff
     else:
         myChecksum = htons(myChecksum)
 
-    # Create a new header with the new checksum in Big-Endian notation
-    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, code, myChecksum, identifier, sequence)
+    header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, ID, 1)
 
     packet = header + data
     return packet
@@ -71,65 +68,67 @@ def get_route(hostname):
         for tries in range(TRIES):
             destAddr = gethostbyname(hostname)
 
-            mySocket = socket(AF_INET, SOCK_RAW, getprotobyname("icmp"))
+            icmp = getprotobyname("icmp")
+            mySocket = socket(AF_INET, SOCK_RAW, icmp)
+
             mySocket.setsockopt(IPPROTO_IP, IP_TTL, struct.pack('I', ttl))
             mySocket.settimeout(TIMEOUT)
-
             try:
-                icmpPacket = build_packet()
-                # mySocket.sendto(icmpPacket, (hostname, 0))
-                mySocket.sendto(icmpPacket, (destAddr, 0))
+                d = build_packet()
+                # mySocket.sendto(d, (hostname, 0))
+                mySocket.sendto(d, (destAddr, 0))
+                t= time.time()
                 startedSelect = time.time()
                 whatReady = select.select([mySocket], [], [], timeLeft)
                 howLongInSelect = (time.time() - startedSelect)
-
-                if not whatReady[0]: # Timeout
+                if whatReady[0] == []: # Timeout
                     tracelist1.append(str(ttl))
                     tracelist1.append("*")
                     tracelist1.append("Request timed out.")
+                    #You should add the list above to your all traces list
                     tracelist2.append(tracelist1)
                 recvPacket, addr = mySocket.recvfrom(1024)
                 timeReceived = time.time()
                 timeLeft = timeLeft - howLongInSelect
-
                 if timeLeft <= 0:
+                    # tracelist1.append("* * * Request timed out.")
                     tracelist1.append(str(ttl))
                     tracelist1.append("*")
                     tracelist1.append("Request timed out.")
+                    #You should add the list above to your all traces list
                     tracelist2.append(tracelist1)
             except timeout:
                 continue
 
 
             else:
-                # Fetch the icmp type from the IP packet
-                # type field is the first after the IP header
-                type = struct.unpack("b", recvPacket[20:21])[0]
+                #Fetch the icmp type from the IP packet
+                types = struct.unpack("b", recvPacket[20:21])[0]
                 try:
                     responseHostName = gethostbyaddr(addr[0])
                 except herror:
                     responseHostName = "hostname not returnable"
 
-                if type == 11:
-                    bytes = struct.calcsize("icmpPacket")
-                    timeSent = struct.unpack("icmpPacket", recvPacket[28:28 +
+                if types == 11:
+                    bytes = struct.calcsize("d")
+                    timeSent = struct.unpack("d", recvPacket[28:28 +
                     bytes])[0]
                     tracelist1.append(str(ttl))
                     tracelist1.append(str((timeReceived - timeSent) * 1000))
                     tracelist1.append(addr[0])
                     tracelist1.append(responseHostName)
                     tracelist2.append(tracelist1)
-                elif type == 3:
-                    bytes = struct.calcsize("icmpPacket")
-                    timeSent = struct.unpack("icmpPacket", recvPacket[28:28 + bytes])[0]
+                elif types == 3:
+                    bytes = struct.calcsize("d")
+                    timeSent = struct.unpack("d", recvPacket[28:28 + bytes])[0]
                     tracelist1.append(str(ttl))
                     tracelist1.append(str((timeReceived - timeSent) * 1000))
                     tracelist1.append(addr[0])
                     tracelist1.append(responseHostName)
                     tracelist2.append(tracelist1)
-                elif type == 0:
-                    bytes = struct.calcsize("icmpPacket")
-                    timeSent = struct.unpack("icmpPacket", recvPacket[28:28 + bytes])[0]
+                elif types == 0:
+                    bytes = struct.calcsize("d")
+                    timeSent = struct.unpack("d", recvPacket[28:28 + bytes])[0]
                     tracelist1.append(str(ttl))
                     tracelist1.append(str((timeReceived - timeSent) * 1000))
                     tracelist1.append(addr[0])
